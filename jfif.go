@@ -89,20 +89,10 @@ func readUntilMarker(bufReader *bufio.Reader, marker byte) (err error) {
 	}
 }
 
-func ParseJfif(imagePath string) (*APP0Entry, error) {
-	file, err := os.Open(imagePath)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func(fp *os.File) {
-		_ = fp.Close()
-	}(file)
-
-	bufReader := bufio.NewReader(file)
-
+// ParseJfifReader reads bufReader and extracts section bytes into struct APP0Entry
+func ParseJfifReader(bufReader *bufio.Reader) (*APP0Entry, error) {
 	// FF E0 is the JFIF-APP0 marker (All Markers start with FF so only provide second byte)
-	err = readUntilMarker(bufReader, 0xE0)
+	err := readUntilMarker(bufReader, 0xE0)
 	if err != nil {
 		return nil, err
 	}
@@ -176,4 +166,20 @@ func ParseJfif(imagePath string) (*APP0Entry, error) {
 	}
 
 	return e, nil
+}
+
+// ParseJfif accepts an imagePath and creates a bufio.Reader for ParseJfifReader
+func ParseJfif(imagePath string) (*APP0Entry, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(fp *os.File) {
+		_ = fp.Close()
+	}(file)
+
+	bufReader := bufio.NewReader(file)
+
+	return ParseJfifReader(bufReader)
 }

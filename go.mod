@@ -1,3 +1,3 @@
-module github.com/HenryEcker/jpeg-utils
+module github.com/henryecker/jpeg-utils
 
 go 1.27
