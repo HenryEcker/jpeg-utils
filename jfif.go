@@ -58,18 +58,19 @@ func NewJFIFFieldValidationError(message string) error {
 	return &JFIFFieldValidationError{message}
 }
 
+// handleMaybeEOF converts io.EOF into EofBeforeJFIF and passes through all other errors
+func handleMaybeEOF(maybeEOF error) error {
+	if maybeEOF == io.EOF {
+		return EofBeforeJFIF
+	}
+	return maybeEOF
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 // Search bufio.Reader for JPEG Markers (FF) and check against second byte (marker)
 // to find the correct location to being reading data
 func readUntilMarker(bufReader *bufio.Reader, marker byte) (err error) {
-	handleMaybeEOF := func(maybeEOFErr error) error {
-		if maybeEOFErr == io.EOF {
-			return EofBeforeJFIF
-		}
-		return maybeEOFErr
-	}
-
 	for {
 		// All JPEG INDICATORS START WITH FF
 		_, err = bufReader.ReadBytes(0xFF)
@@ -84,7 +85,7 @@ func readUntilMarker(bufReader *bufio.Reader, marker byte) (err error) {
 		}
 		// Check if the second byte matches the marker provided
 		if bv == marker {
-			return nil
+			return nil // bufReader is now staged at the correct location
 		}
 	}
 }
